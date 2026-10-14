@@ -1,0 +1,1 @@
+ALTER TABLE `project` ADD `avatar_url` text DEFAULT '' NOT NULL;
