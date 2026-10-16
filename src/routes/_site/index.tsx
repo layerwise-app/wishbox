@@ -6,6 +6,7 @@ import { FeatureTiles } from '~/components/landing/feature-tiles';
 import { HeroBoard } from '~/components/landing/hero-board';
 import { HowItWorks } from '~/components/landing/how-it-works';
 import { useReveal } from '~/components/landing/motion';
+import { PoweredByLayerwise } from '~/components/powered-by-layerwise';
 import { Logo } from '~/components/shell';
 import { Button } from '~/components/ui/button';
 import { demoSlug } from '~/lib/feedback';
@@ -126,6 +127,9 @@ function Landing() {
             <Link {...demoLink} className='hover:text-foreground'>Demo</Link>
             <Link to='/dashboard' className='hover:text-foreground'>Dashboard</Link>
           </nav>
+        </div>
+        <div className='mx-auto flex max-w-6xl justify-center px-4 pb-8 sm:px-6'>
+          <PoweredByLayerwise />
         </div>
       </footer>
     </>

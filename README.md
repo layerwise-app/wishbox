@@ -1,5 +1,12 @@
 # Wishbox
 
+<a href="https://layerwise.app">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://layerwise.app/powered-by-dark.png" />
+    <img src="https://layerwise.app/powered-by.png" alt="Powered by Layerwise" width="320" />
+  </picture>
+</a>
+
 A starter for a multi-tenant product feedback SaaS, in the spirit of Canny or
 Featurebase. Teams sign up on the main site and create projects; each project
 gets a public feedback board and roadmap where the team's own users sign in,
