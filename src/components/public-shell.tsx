@@ -10,6 +10,7 @@ import { Dialog, DialogContent } from '~/components/ui/dialog';
 import { DropdownMenuItem } from '~/components/ui/dropdown-menu';
 import { useSession } from '~/lib/auth-client';
 import type { Project, ProjectRole } from '~/lib/feedback';
+import { PoweredByLayerwise } from '~/components/powered-by-layerwise';
 import { cn } from '~/lib/utils';
 
 /** The public site of one project: its feedback board, roadmap, and idea pages. */
@@ -87,12 +88,13 @@ export function PublicShell({ project, role, demo, children }: { project: Projec
         </div>
       </header>
       <main className='mx-auto w-full max-w-6xl px-4 pt-6 pb-16 sm:px-6 sm:pt-10'>{children}</main>
-      <footer className='pb-10'>
+      <footer className='flex flex-col items-center gap-3 pb-10'>
         <Link to='/' className='mx-auto flex w-fit items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground'>
           Powered by
           <Logo className='size-3.5' />
           <span className='font-medium'>Wishbox</span>
         </Link>
+        <PoweredByLayerwise />
       </footer>
       <Dialog
         open={authOpen}

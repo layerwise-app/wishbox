@@ -1,20 +1,49 @@
+<a href="https://layerwise.app"><picture><source media="(prefers-color-scheme: dark)" srcset="https://layerwise.app/powered-by-dark.png"><img src="https://layerwise.app/powered-by.png" alt="Powered by Layerwise" width="174" height="28"></picture></a>
+
 # Wishbox
 
-<a href="https://layerwise.app">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://layerwise.app/powered-by-dark.png" />
-    <img src="https://layerwise.app/powered-by.png" alt="Powered by Layerwise" width="320" />
-  </picture>
-</a>
+Wishbox is a product feedback app for teams that want to hear from their
+users. A team signs up, creates a project, and gets a public board and roadmap
+at `/p/<slug>`. Visitors to a board post ideas, vote on the ones they want,
+comment, and follow each idea's status from open to completed, and they get an
+email when the team moves or merges their idea. The team moderates everything
+from a dashboard. Try the live demo at
+[wishbox.layerwise.site](https://wishbox.layerwise.site/).
 
-A starter for a multi-tenant product feedback SaaS, in the spirit of Canny or
-Featurebase. Teams sign up on the main site and create projects; each project
-gets a public feedback board and roadmap where the team's own users sign in,
-post ideas, vote, and comment.
+Wishbox was built with [Layerwise](https://layerwise.app); open it in Layerwise
+to make your own version.
 
-Built with React, TypeScript, TanStack Start and Query, Tailwind CSS,
-shadcn/ui, Tiptap, Better Auth, Drizzle ORM, Cloudflare D1, and Cloudflare
-Workers. Licensed under MIT.
+It uses React, TypeScript, TanStack Start and Query, Tailwind CSS, shadcn/ui,
+Tiptap, Better Auth, Drizzle ORM, and Cloudflare D1 and Workers, with Layerwise
+Storage and Email.
+
+## Making It Your Own
+
+- **Landing page copy and sections:** `src/routes/_site/index.tsx`, with the
+  animated previews in `src/components/landing/` and their styles in
+  `src/styles/landing.css`.
+- **Site header** (name, Demo link, GitHub button): `src/routes/_site.tsx`;
+  the GitHub link is `REPO_URL` in `src/components/github-button.tsx`.
+- **Page title and description:** `src/routes/__root.tsx` and each route's
+  `head`; meta tags are built by `src/utils/seo.ts`.
+- **Colors, font, and radius:** the `:root` (light) and `.dark` variables in
+  `src/styles/app.css`; the font is Outfit, imported at the top of that file
+  and set as `--font-sans`. Status dot colors are `statusDot` in
+  `src/components/feedback-ui.tsx`.
+- **Logo and icons:** `Logo` in `src/components/shell.tsx`, and the icons in
+  `public/`.
+- **Board header and footer:** `src/components/public-shell.tsx`.
+- **Statuses and category colors:** `statuses`, `statusLabels`, and
+  `tagColors` in `src/lib/feedback.ts`.
+- **Categories a new project starts with:** add an entry like
+  `{ name: 'Integration', color: 'green' }` to `defaultCategories` in
+  `src/lib/project.functions.ts` (the color must be one of `tagColors`).
+- **Demo board content:** add an idea to `examples` in
+  `src/lib/feedback.seed.ts` (its `tags` are the demo category IDs `feature`,
+  `improvement`, `bug`, and `design`, and `votes` is at most 48, the number of
+  demo profiles), then bump `demoVersion` in the same file so boards seeded
+  earlier pick it up.
+- **Notification email wording:** `src/lib/feedback.email.ts`.
 
 ## Routes
 
@@ -97,8 +126,8 @@ admin plugin (set in the database) can't make changes anywhere.
 Projects, ideas, categories, votes, comments, and status updates live in D1
 through Drizzle, scoped by project. Avatar files live in Layerwise Storage
 (`env.STORAGE`, typed in `src/lib/storage.ts`); email goes through
-`env.EMAIL` (typed in `src/lib/email.ts`). A composite primary key guarantees one vote
-per user per idea. Public queries exclude hidden and merged ideas. Write-time
+`env.EMAIL` (typed in `src/lib/email.ts`). A composite primary key guarantees
+one vote per user per idea. Public queries exclude hidden and merged ideas. Write-time
 checks keep votes and comments off merged, hidden, or closed ideas.
 
 The `projects` migration moves a board created before projects existed into the
@@ -118,8 +147,8 @@ pnpm run build
 
 The tests use Node 24+ built-in SQLite, TypeScript support, and module hooks.
 They cover validation; avatar type detection; notification email escaping;
-board filtering and sorting; rich text round trips,
-escaping, and editor document conversion; real Drizzle SQL against the
+board filtering and sorting; rich text round trips, escaping, and editor
+document conversion; real Drizzle SQL against the
 generated migrations; unique voting; write-time restrictions; cross-project
 merges; and atomic merging with rollback. They don't replace browser or
 end-to-end authentication tests.
@@ -136,6 +165,4 @@ email integration.
 Authentication email delivery errors stay visible in the UI. When no
 authentication email endpoint is available, the development helper logs OTPs.
 
-Wishbox's source, CSS, copy, and logo are original. Fider's public feedback
-patterns were a product reference only; no Fider code or assets were used.
-Existing dependency licenses remain in their respective packages.
+Licensed under MIT. Dependency licenses remain in their respective packages.

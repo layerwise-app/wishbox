@@ -14,7 +14,7 @@ export function PoweredByLayerwise() {
         width={174}
         height={28}
         loading='lazy'
-        className='h-7 w-auto dark:hidden'
+        className='h-7 w-[174px] dark:hidden'
       />
       <img
         src='https://layerwise.app/powered-by-dark.png'
@@ -22,7 +22,7 @@ export function PoweredByLayerwise() {
         width={174}
         height={28}
         loading='lazy'
-        className='hidden h-7 w-auto dark:block'
+        className='hidden h-7 w-[174px] dark:block'
       />
     </a>
   );
