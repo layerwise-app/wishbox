@@ -1,9 +1,11 @@
 import { getRequestHeaders } from '@tanstack/react-start/server';
+import { env } from 'cloudflare:workers';
 import { and, eq } from 'drizzle-orm';
 import { db } from '~/db';
 import { projectMembers, projects } from '~/db/schema';
 import { auth } from '~/lib/auth';
 import type { Project, ProjectRole } from '~/lib/feedback';
+import type {} from '~/lib/storage';
 
 /** The signed-in user, or null for visitors and banned accounts. */
 export async function currentUser() {
@@ -17,9 +19,25 @@ export async function sessionUser() {
   return current;
 }
 
+/**
+ * The local preview can't make Storage files public, so there avatars are
+ * stored privately and shown through signed links. Published apps store them
+ * publicly. The local preview has its own database, so its keys never reach
+ * the published app.
+ */
+export const privateAvatars = import.meta.env.DEV;
+
+/** The avatar to show: the uploaded file, else an image URL saved before uploads, else none. */
+export async function avatarSrc(project: { avatarKey: string; avatarUrl: string }) {
+  if (!project.avatarKey) return project.avatarUrl;
+  return privateAvatars ? env.STORAGE.signedUrl(project.avatarKey, { expiresIn: 24 * 60 * 60 }) : env.STORAGE.publicUrl(project.avatarKey);
+}
+
 export async function findProject(slug: string): Promise<Project | null> {
-  const [project] = await db.select({ id: projects.id, slug: projects.slug, name: projects.name, description: projects.description, avatarUrl: projects.avatarUrl }).from(projects).where(eq(projects.slug, slug));
-  return project ?? null;
+  const [project] = await db.select({ id: projects.id, slug: projects.slug, name: projects.name, description: projects.description, avatarUrl: projects.avatarUrl, avatarKey: projects.avatarKey }).from(projects).where(eq(projects.slug, slug));
+  if (!project) return null;
+  const { avatarKey, ...rest } = project;
+  return { ...rest, avatarUrl: await avatarSrc(project) };
 }
 
 /** The user's role on the project's team, or null when they are a visitor. */

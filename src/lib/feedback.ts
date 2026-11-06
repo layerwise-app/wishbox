@@ -83,15 +83,8 @@ export function validateProject(input: unknown) {
   if (!data) throw new Error('Missing request.');
   return {
     name: validateText(data.name, 'Name', 2, 60),
-    description: typeof data.description === 'string' ? validateText(data.description, 'Description', 0, 200) : '',
-    avatarUrl: typeof data.avatarUrl === 'string' ? validateImageUrl(data.avatarUrl) : ''
+    description: typeof data.description === 'string' ? validateText(data.description, 'Description', 0, 200) : ''
   };
-}
-/** An empty string, or an absolute http(s) URL. Other schemes could run script when rendered. */
-export function validateImageUrl(value: string) {
-  const url = validateText(value, 'Avatar URL', 0, 500);
-  if (url && !/^https?:\/\/[^\s]+$/i.test(url)) throw new Error('Avatar URL must start with https:// or http://.');
-  return url;
 }
 export function initials(name: string) {
   return name.split(' ').filter(Boolean).slice(0, 2).map((word) => word[0]).join('').toUpperCase();

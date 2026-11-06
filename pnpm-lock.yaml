@@ -119,8 +119,8 @@ importers:
         specifier: 1.58.0
         version: 1.58.0(@types/node@26.6.2)(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.1)(jiti@2.7.0))(wrangler@4.137.0(@types/node@26.6.2))
       '@layerwise/vite':
-        specifier: ^0.1.8
-        version: 0.1.8(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.1)(jiti@2.7.0))
+        specifier: ^0.1.11
+        version: 0.1.11(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.1)(jiti@2.7.0))
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.1)(jiti@2.7.0))
@@ -984,8 +984,8 @@ packages:
     resolution: {integrity: sha512-hloP58zRVCRSpgDxmqCWJNlizAlUgJFqG2ypq79DCvyv9tHjRYMDOcPFjzfl/A1/YxDvRCZz8wvZvmapQnKwFQ==}
     engines: {node: '>=12'}
 
-  '@layerwise/vite@0.1.8':
-    resolution: {integrity: sha512-jkUz+2NQyJeO18ygF5d16Fa7RmKTEalxzUwqszF8dj/bFGhGlPgT9Z4jkHtMJzJ2NPHPsQvtpDsn4vfxod/keg==}
+  '@layerwise/vite@0.1.11':
+    resolution: {integrity: sha512-gv9cLtigisU3npUg70xQE/qe+hzDFCYCv2ryQn3HUwxQKfzb1POODuO5uEre0QRAachvfXjWV5GtscmljeIdpA==}
     peerDependencies:
       vite: '>=5'
     peerDependenciesMeta:
@@ -3630,6 +3630,9 @@ packages:
   magic-string@0.30.21:
     resolution: {integrity: sha512-vd2F4YUyEXKGcLHoq+TEyCjxueSeHnFxyyjNp80yg0XV4vUhnDer/lvvlqM/arB5bXQN5K2/3oinyCRyx8T2CQ==}
 
+  magic-string@1.4.3:
+    resolution: {integrity: sha512-z12OxmaPGE0F4xlpGdjuAUckipLpQlTAuAmyGhNoD7ODpYUzvDfvtxUbjM/jwznyP178oju/KDdyi220wNJ0RQ==}
+
   math-intrinsics@1.1.0:
     resolution: {integrity: sha512-/IXtbwEk5HTPyEwyKX6hGkYXxM9nbj64B+ilVJnC/R6B0pH5G4V3b0pVbL7DBj4tkhBAppbQUlf6F6Xl9LHu1g==}
     engines: {node: '>= 0.4'}
@@ -5195,10 +5198,10 @@ snapshots:
     dependencies:
       jsbi: 4.3.2
 
-  '@layerwise/vite@0.1.8(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.1)(jiti@2.7.0))':
+  '@layerwise/vite@0.1.11(vite@8.3.0(@types/node@26.6.2)(esbuild@0.28.1)(jiti@2.7.0))':
     dependencies:
       '@babel/parser': 7.29.9
-      magic-string: 0.30.21
+      magic-string: 1.4.3
     optionalDependencies:
       vite: 8.3.0(@types/node@26.6.2)(esbuild@0.28.1)(jiti@2.7.0)
 
@@ -7579,6 +7582,10 @@ snapshots:
       react: 19.3.0
 
   magic-string@0.30.21:
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.6.0
+
+  magic-string@1.4.3:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.6.0
 

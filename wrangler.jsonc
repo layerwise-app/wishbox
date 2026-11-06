@@ -14,6 +14,22 @@
       "database_id": "local"
     }
   ],
+  // Layerwise Storage and Email. Local preview serves these bindings through
+  // the `@layerwise/vite` Storage and Email Workers (local email is never
+  // sent; it appears in the Layerwise app). Published apps are bound to the
+  // project's Storage and Email automatically.
+  "services": [
+    {
+      "binding": "STORAGE",
+      "service": "layerwise-storage",
+      "entrypoint": "ProjectStorage"
+    },
+    {
+      "binding": "EMAIL",
+      "service": "layerwise-project-email",
+      "entrypoint": "ProjectEmail"
+    }
+  ],
   "vars": {
     "BETTER_AUTH_URL": "",
     "BETTER_AUTH_SECRET": ""

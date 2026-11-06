@@ -35,9 +35,16 @@ every environment, has no team, and anyone signed in can post to it.
 ## Features
 
 - **Projects:** name, link (`/p/<slug>`, fixed after creation), description,
-  and an avatar. The avatar is an image URL; uploads aren't supported. It shows
-  in the dashboard, the project switcher, the board header, and as the board's
-  favicon, and falls back to a letter mark when the image can't load.
+  and an avatar. Admins and owners upload the avatar in Settings (PNG, JPEG,
+  WebP, or GIF up to 2 MB, checked by its bytes on the server). It's stored as a
+  public file in Layerwise Storage under a new key for each upload; D1 keeps the
+  key, and the old file is deleted once the new one is saved. Image URLs saved
+  before uploads keep showing until replaced or removed. The avatar shows in the
+  dashboard, the project switcher, the board header, and as the board's
+  favicon, and falls back to a letter mark when the image can't load. The local
+  preview can't make Storage files public, so there avatars are stored
+  privately and shown through signed links (`privateAvatars` in
+  `src/lib/access.ts`).
 - **Two kinds of sign-in, one account system:** teams sign in on the main site;
   board visitors sign in from a dialog on the board itself and return to what
   they were doing (posting, voting, commenting). Email/password, email sign-in
@@ -57,9 +64,18 @@ every environment, has no team, and anyone signed in can post to it.
   edit, hide/show, and merge. Merging is atomic in D1, moves unique votes,
   comments, tags, and status history, and is irreversible. Categories can be
   created, renamed, recolored, and deleted.
+- **Email notifications** through Layerwise Email: when the team changes an
+  idea's status or merges it into another idea, its author gets an email with
+  the new status, the team's note, and a link to the idea. The address comes
+  from the author's account in D1. Nobody is emailed about their own changes,
+  hidden ideas, or demo profiles. A failed email is logged and never fails the
+  change. Layerwise adds a one-click unsubscribe link to every email. The local
+  preview never sends real email; messages appear under Email → Local in the
+  Layerwise app. See `src/lib/feedback.email.ts` and `src/lib/feedback.notify.ts`.
 - Light and dark themes that follow the system, with a manual toggle.
 
-Email notifications, billing, custom domains, and integrations are left to you.
+Comment notifications, billing, custom domains, and integrations are left to
+you.
 
 ## Access
 
@@ -79,7 +95,9 @@ admin plugin (set in the database) can't make changes anywhere.
 ## Data And Development
 
 Projects, ideas, categories, votes, comments, and status updates live in D1
-through Drizzle, scoped by project. A composite primary key guarantees one vote
+through Drizzle, scoped by project. Avatar files live in Layerwise Storage
+(`env.STORAGE`, typed in `src/lib/storage.ts`); email goes through
+`env.EMAIL` (typed in `src/lib/email.ts`). A composite primary key guarantees one vote
 per user per idea. Public queries exclude hidden and merged ideas. Write-time
 checks keep votes and comments off merged, hidden, or closed ideas.
 
@@ -99,7 +117,8 @@ pnpm run build
 ```
 
 The tests use Node 24+ built-in SQLite, TypeScript support, and module hooks.
-They cover validation; board filtering and sorting; rich text round trips,
+They cover validation; avatar type detection; notification email escaping;
+board filtering and sorting; rich text round trips,
 escaping, and editor document conversion; real Drizzle SQL against the
 generated migrations; unique voting; write-time restrictions; cross-project
 merges; and atomic merging with rollback. They don't replace browser or
@@ -112,7 +131,8 @@ production when publishing. Never hand-edit migration history.
 ## Environment
 
 Keep `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `AUTH_EMAIL_URL` server-side.
-Layerwise supplies the D1 binding and authentication email integration.
+Layerwise supplies the D1, Storage, and Email bindings and the authentication
+email integration.
 Authentication email delivery errors stay visible in the UI. When no
 authentication email endpoint is available, the development helper logs OTPs.
 

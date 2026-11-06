@@ -1,5 +1,6 @@
 import { createFileRoute, Link, Outlet } from '@tanstack/react-router';
 import { ArrowRight } from 'lucide-react';
+import { GitHubButton } from '~/components/github-button';
 import { Logo, ThemeToggle } from '~/components/shell';
 import { Button } from '~/components/ui/button';
 import { useSession } from '~/lib/auth-client';
@@ -22,6 +23,7 @@ function SiteLayout() {
             <Link to='/p/$slug' params={{ slug: 'demo' }} className='text-sm text-muted-foreground transition-colors hover:text-foreground'>Demo</Link>
           </nav>
           <div className='ml-auto flex items-center gap-1.5'>
+            <GitHubButton />
             <ThemeToggle />
             {/* Waits for the session so signed-in visitors don't see the sign-in buttons flash. */}
             {isPending ? null : session ? (

@@ -78,8 +78,11 @@ export const projects = sqliteTable('project', {
   slug: text('slug').notNull().unique(),
   name: text('name').notNull(),
   description: text('description').notNull().default(''),
-  // An image URL. Uploads aren't supported, so the image is hosted elsewhere.
+  // An image hosted elsewhere, set before uploads existed. Still shown when
+  // there's no uploaded avatar.
   avatarUrl: text('avatar_url').notNull().default(''),
+  // The uploaded avatar's Storage key (public when published). Takes precedence over avatarUrl.
+  avatarKey: text('avatar_key').notNull().default(''),
   createdAt: integer('created_at').notNull(),
 });
 

@@ -13,6 +13,8 @@ const { selectPosts, slugify, validateBoardSearch, validateId, validatePost, val
 const { parseRichText, plainText, richTextToHtml, stringifyRichText } = await import('../src/lib/rich-text.ts');
 const { voteInsert, commentInsert, mergeQueries } = await import('../src/lib/feedback.persistence.ts');
 const { docToRichText, richTextToDoc } = await import('../src/lib/rich-text-doc.ts');
+const { detectAvatarType } = await import('../src/lib/avatar.ts');
+const { mergedEmail, statusChangeEmail } = await import('../src/lib/feedback.email.ts');
 const queryBuilder = drizzle({});
 
 const filters = { status: 'all', tag: '', search: '', sort: 'votes' };
@@ -238,4 +240,25 @@ test('editor documents convert to and from stored rich text', () => {
   };
   assert.equal(docToRichText(doc), '**see [docs](https://x.dev) now** bad\n\n- a b');
   assert.deepEqual(richTextToDoc(''), { type: 'doc', content: [{ type: 'paragraph' }] });
+});
+
+test('avatar uploads are recognized by their bytes, not the declared type', () => {
+  const bytes = (...values) => new Uint8Array([...values.flatMap((value) => typeof value === 'string' ? [...value].map((char) => char.charCodeAt(0)) : value), 0, 0, 0, 0]);
+  assert.equal(detectAvatarType(bytes([0x89], 'PNG', [0x0d, 0x0a, 0x1a, 0x0a]))?.contentType, 'image/png');
+  assert.equal(detectAvatarType(bytes([0xff, 0xd8, 0xff, 0xe0]))?.extension, 'jpg');
+  assert.equal(detectAvatarType(bytes('GIF89a'))?.contentType, 'image/gif');
+  assert.equal(detectAvatarType(bytes('RIFF', [1, 2, 3, 4], 'WEBP'))?.contentType, 'image/webp');
+  for (const other of [bytes('<svg xmlns="http://www.w3.org/2000/svg">'), bytes('<html>'), bytes('RIFF', [1, 2, 3, 4], 'WAVE'), new Uint8Array()]) assert.equal(detectAvatarType(other), null);
+});
+test('idea emails escape user content in html and keep subjects on one line', () => {
+  const context = { projectName: 'Acme <Labs>', url: 'https://acme.layerwise.site/p/acme/ideas/abc' };
+  const status = statusChangeEmail(context, { title: 'Dark <script>alert(1)</script>\nmode', status: 'in_progress', message: 'Shipping "soon" & <b>fast</b>' });
+  assert.equal(status.subject, 'Your idea “Dark <script>alert(1)</script> mode” is now in progress');
+  assert.ok(!status.html.includes('<script>') && !status.html.includes('<b>') && !status.html.includes('<Labs>'));
+  assert.ok(status.html.includes('&#60;script&#62;') && status.html.includes('&#34;soon&#34; &#38;'));
+  assert.ok(status.html.includes(`href="${context.url}"`) && status.text.includes(`View the idea: ${context.url}`));
+  assert.ok(status.text.includes('Acme <Labs> moved your idea “Dark <script>alert(1)</script> mode” to In progress.') && status.text.includes('Shipping "soon" & <b>fast</b>'));
+  const merged = mergedEmail(context, { title: 'Dark mode', targetTitle: 'Themes & <colors>' });
+  assert.equal(merged.subject, 'Your idea “Dark mode” was merged');
+  assert.ok(merged.html.includes('Themes &#38; &#60;colors&#62;') && !merged.html.includes('blockquote'));
 });

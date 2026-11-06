@@ -5,6 +5,8 @@ import { comments, feedback, feedbackTags, projectMembers, statusUpdates, tags, 
 import { currentUser, findProject, managedProject, memberRole, sessionUser } from '~/lib/access';
 import { seedDemo } from '~/lib/feedback.seed';
 import { demoSlug, validateId, validatePost, validateSlugInput, validateTag, validateUpdate, validateVote, validateText as text, type Post, type Tag } from '~/lib/feedback';
+import { mergedEmail, statusChangeEmail } from '~/lib/feedback.email';
+import { notifyIdeaAuthor } from '~/lib/feedback.notify';
 import { commentInsert, mergeQueries, voteInsert } from '~/lib/feedback.persistence';
 
 /** Loads a post with the user's role on its project. Hidden posts exist only for the team. */
@@ -130,6 +132,10 @@ export const updatePost = createServerFn({ method: 'POST' }).validator(validateU
     ...(data.tagIds.length ? [db.insert(feedbackTags).values(data.tagIds.map((tagId) => ({ postId: data.id, tagId })))] : []),
     ...(post.status !== data.status ? [db.insert(statusUpdates).values({ id: crypto.randomUUID(), postId: data.id, authorId: current.id, status: data.status, message: data.message || `Moved to ${data.status.replace('_', ' ')}.`, createdAt: Date.now() })] : []),
   ]);
+  // Only the team can change status. A hidden idea's page is closed to its author, so there's nothing to link to.
+  if (post.status !== data.status && !data.hidden) {
+    await notifyIdeaAuthor({ authorId: post.authorId, actorId: current.id, projectId: post.projectId, linkId: data.id }, (context) => statusChangeEmail(context, { title: data.title, status: data.status, message: data.message }));
+  }
   return { success: true };
 });
 
@@ -173,5 +179,6 @@ export const mergePosts = createServerFn({ method: 'POST' }).validator((input: u
   } catch {
     throw new Error('The merge could not be completed. The ideas may have changed. Refresh and try again.');
   }
+  await notifyIdeaAuthor({ authorId: source.authorId, actorId: current.id, projectId: source.projectId, linkId: data.targetId }, (context) => mergedEmail(context, { title: source.title, targetTitle: target.title }));
   return { id: data.targetId };
 });

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from '@tanstack/react-router';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -19,24 +19,22 @@ import { Input } from '~/components/ui/input';
 import { Spinner } from '~/components/ui/spinner';
 import { Textarea } from '~/components/ui/textarea';
 import { ProjectMark } from '~/components/shell';
+import { avatarAccept, avatarTooLarge, maxAvatarBytes } from '~/lib/avatar';
 import { demoSlug, type Project } from '~/lib/feedback';
-import { deleteProject, updateProject } from '~/lib/project.functions';
+import { deleteProject, removeProjectAvatar, updateProject, uploadProjectAvatar } from '~/lib/project.functions';
 
 export function ProjectSettings({ project, owner }: { project: Project; owner: boolean }) {
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description);
-  const [avatarUrl, setAvatarUrl] = useState(project.avatarUrl);
   const client = useQueryClient();
   const save = useMutation({
-    mutationFn: () => updateProject({ data: { slug: project.slug, name, description, avatarUrl } }),
+    mutationFn: () => updateProject({ data: { slug: project.slug, name, description } }),
     onSuccess: async () => {
       await client.invalidateQueries({ queryKey: ['wishbox'] });
       toast.success('Project updated');
     }
   });
-  // Partial input like `h` would load as a relative URL, so preview only absolute ones.
-  const preview = /^https?:\/\/\S+\.\S+/i.test(avatarUrl.trim()) ? avatarUrl.trim() : undefined;
-  const unchanged = name.trim() === project.name && description.trim() === project.description && avatarUrl.trim() === project.avatarUrl;
+  const unchanged = name.trim() === project.name && description.trim() === project.description;
 
   return (
     <div className='grid max-w-2xl gap-6'>
@@ -47,14 +45,7 @@ export function ProjectSettings({ project, owner }: { project: Project; owner: b
           save.mutate();
         }}
       >
-        <Field className='gap-2'>
-          <FieldLabel htmlFor='settings-avatar'>Avatar</FieldLabel>
-          <div className='flex items-center gap-3'>
-            <ProjectMark name={name || project.name} src={preview} className='size-10 rounded-xl text-base' />
-            <Input id='settings-avatar' type='url' placeholder='https://example.com/logo.png' value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} maxLength={500} />
-          </div>
-          <FieldDescription>A square image URL. Leave empty to use the letter.</FieldDescription>
-        </Field>
+        <AvatarField project={project} name={name || project.name} />
         <Field className='gap-2'>
           <FieldLabel htmlFor='settings-name'>Name</FieldLabel>
           <Input id='settings-name' value={name} onChange={(e) => setName(e.target.value)} required minLength={2} maxLength={60} />
@@ -78,6 +69,80 @@ export function ProjectSettings({ project, owner }: { project: Project; owner: b
       </form>
       {owner && project.id !== demoSlug && <DeleteProject project={project} />}
     </div>
+  );
+}
+
+/** Uploads and removes save right away, separately from the form's Save. */
+function AvatarField({ project, name }: { project: Project; name: string }) {
+  const input = useRef<HTMLInputElement>(null);
+  const client = useQueryClient();
+  const upload = useMutation({
+    mutationFn: (file: File) => {
+      if (file.size > maxAvatarBytes) throw new Error(avatarTooLarge);
+      const form = new FormData();
+      form.set('slug', project.slug);
+      form.set('file', file);
+      return uploadProjectAvatar({ data: form });
+    },
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: ['wishbox'] });
+      toast.success('Avatar updated');
+    }
+  });
+  const remove = useMutation({
+    mutationFn: () => removeProjectAvatar({ data: { slug: project.slug } }),
+    onSuccess: async () => {
+      await client.invalidateQueries({ queryKey: ['wishbox'] });
+      toast.success('Avatar removed');
+    }
+  });
+  const pending = upload.isPending || remove.isPending;
+  const error = upload.error ?? remove.error;
+
+  return (
+    <Field className='gap-2'>
+      <FieldLabel htmlFor='settings-avatar'>Avatar</FieldLabel>
+      <div className='flex items-center gap-3'>
+        <ProjectMark name={name} src={project.avatarUrl || undefined} className='size-10 rounded-xl text-base' />
+        <input
+          ref={input}
+          id='settings-avatar'
+          type='file'
+          accept={avatarAccept}
+          className='sr-only'
+          disabled={pending}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            // Clear it so choosing the same file again still uploads.
+            event.target.value = '';
+            if (!file) return;
+            remove.reset();
+            upload.mutate(file);
+          }}
+        />
+        <Button type='button' variant='outline' size='sm' disabled={pending} onClick={() => input.current?.click()}>
+          {upload.isPending && <Spinner />}
+          Upload
+        </Button>
+        {project.avatarUrl && (
+          <Button
+            type='button'
+            variant='ghost'
+            size='sm'
+            disabled={pending}
+            onClick={() => {
+              upload.reset();
+              remove.mutate();
+            }}
+          >
+            {remove.isPending && <Spinner />}
+            Remove
+          </Button>
+        )}
+      </div>
+      <FieldDescription>A square PNG, JPEG, WebP, or GIF, up to 2 MB.</FieldDescription>
+      {error && <FieldError>{error.message}</FieldError>}
+    </Field>
   );
 }
 
